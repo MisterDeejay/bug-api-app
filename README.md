@@ -1,4 +1,4 @@
-# Toy Robot Simulator
+# Bug/State Creation API
 
 ## Table of contents:
 
@@ -15,13 +15,25 @@ This app is a simple API application that responds to an endpoint /bugs that all
 
 ## Task
 
-* The formal specifications would be:
-* Create an API endpoint /news served by the application which returns latest news items from that model.
-* Create an authorized API endpoint /new which will take a title and body for news and save it to the database. Prevent all XSS and SQL injection vulnerabilities.
-* Give back meaningful error messages and provide enough information on how to run your code.
+1. Create two models: - Bug:
+We want to track these fields:
+- application token (the unique identifier for the application)
+- number (unique number per application, this is not the database primary key) - status ('new', 'in-progress', 'closed')
+- priority ('minor', 'major', 'critical')
+- State:
+Defines the state of the mobile device while reporting the bug, we want to track these
+fields:
+- device (The device name, ex: 'iPhone 5')
+- os (the name of the operating system of the phone) - memory (Number in MB, ex: '1024')
+- storage (Number in MB, example '20480')
+2. Create an endpoint `POST /bugs` that is used to report a bug, the phone will send all the params in one request (for the bug and the state, you design the format), you will use the params to create a new bug and a new state, and return the bug number in a JSON `{ number: 1 }`.
+3. Create an endpoint `GET /bugs/[number]`, which fetches the bug using the number and application token, and returns the attributes in a JSON. Adjust the database indices to minimize the response time.
+4. Create an endpoint `GET /bugs/count`, that receives an application token and replies with the total number of bugs that belong to that application, this endpoint is performing slowly, so we want you to implement a method of in memory caching to speed up the response time.
+5. The `POST /bugs` endpoint's load usually has too many spikes. To workaround this, the endpoint doesn't need to write to the DB directly, but instead it should relay the insertion to a background job, but it should still return the correct bug number (from the cache). You should choose a background processing system that could handle the highest throughput.
 
-### Bonus
-* Take an option language in /new and limit posts on /news based on the requested language.
+Extra:
+- Handle bad requests with an error message and a non success response code, the JSON will contain `{ error: 'the error message' }`
+- Write specs to test the endpoints, add happy and unhappy scenarios.
 
 ## Setup
 
@@ -33,11 +45,11 @@ This app is a simple API application that responds to an endpoint /bugs that all
 
 3. Clone this repo:
 
-    ```git clone git@github.com:MisterDeejay/News-API-App.git```
+    ```git clone git@github.com:MisterDeejay/bug-api-app.git```
 
 4. Change to the app directory:
 
-    ```cd big-api-app```
+    ```cd bug-api-app```
 
 5. Install dependencies:
 
@@ -55,7 +67,7 @@ This app is a simple API application that responds to an endpoint /bugs that all
 
 10. To create a new bug and associated state:
 
-    ```curl -H "Content-Type: application/json" -d '{"application_token":"a1af6c963078aaeed839","priority":"minor","status":"new","state":{"device": "iPhone x","os":"iOS 11","memory":"1024","storage":"20480"}}' http://localhost:3000/bugs```
+    ```curl -H "Content-Type: application/json" -X POST -d '{"application_token":"a1af6c963078aaeed839","priority":"minor","status":"new","state":{"device": "iPhone x","os":"iOS 11","memory":"1024","storage":"20480"}}' http://localhost:3000/bugs```
 
 11. To get back the bug count by application token
 
@@ -67,7 +79,7 @@ This app is a simple API application that responds to an endpoint /bugs that all
 
 ## Running the tests
 
-    rspec spec/
+    ```rspec spec/```
 
 ## Development Notes
 
